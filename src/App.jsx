@@ -12,15 +12,27 @@ import {
   ThumbsUp,
   Building,
   Calculator,
-  Send
+  Phone,
+  Mail,
+  User,
+  Lock,
+  Loader2 // Lade-Icon
 } from 'lucide-react';
 
-// ZIEL-URL für die Weiterleitung
+// --- KONFIGURATION ---
+
+// 1. Deine Formspree Form-ID
+const FORMSPREE_ID = "mwpygkje"; 
+
+// 2. Ziel-URL nach erfolgreichem Eintrag
 const REDIRECT_URL = "https://verticus-gmbh.onepage.me/kontaktdaten";
+
+// ---------------------
 
 const App = () => {
   const [step, setStep] = useState(0);
   const [isCalculating, setIsCalculating] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false); // Status für den Sende-Vorgang
   
   const [formData, setFormData] = useState({
     insuranceType: '',
@@ -29,7 +41,11 @@ const App = () => {
     income: '',
     healthIssues: [],
     familyStatus: '',
-    blacklist: ''
+    blacklist: '',
+    // Kontaktdaten
+    fullName: '',
+    email: '',
+    phone: ''
   });
 
   const totalSteps = 7;
@@ -77,13 +93,36 @@ const App = () => {
     }, 2000);
   };
 
-  // Funktion für die Weiterleitung (bricht aus dem Iframe aus)
-  const handleRedirect = () => {
+  // --- WICHTIG: Die Speicher- & Weiterleitungs-Logik ---
+  const handleFormSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true); // Button deaktivieren & Lade-Icon zeigen
+
     try {
-      window.top.location.href = REDIRECT_URL;
-    } catch (e) {
-      // Fallback, falls der Browser window.top blockiert
-      window.open(REDIRECT_URL, '_blank');
+      // 1. Daten an Formspree senden
+      const response = await fetch(`https://formspree.io/f/${FORMSPREE_ID}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json' // Wichtig: Verhindert Formspree-Weiterleitung
+        },
+        body: JSON.stringify(formData)
+      });
+
+      if (response.ok) {
+        // 2. Wenn erfolgreich gespeichert: Weiterleiten
+        try {
+          window.top.location.href = REDIRECT_URL;
+        } catch (e) {
+          window.open(REDIRECT_URL, '_blank');
+        }
+      } else {
+        alert("Hoppla, da ist etwas schiefgelaufen. Bitte versuche es erneut.");
+        setIsSubmitting(false);
+      }
+    } catch (error) {
+      alert("Netzwerkfehler. Bitte prüfe deine Verbindung.");
+      setIsSubmitting(false);
     }
   };
 
@@ -312,8 +351,129 @@ const App = () => {
         );
 
       case 8: // Result Page (The Pitch)
-        return <ResultPage formData={formData} onRedirect={handleRedirect} />;
+        return <ResultPage formData={formData} onNextStep={() => setStep(9)} />;
       
+      case 9: // Opt-In / Squeeze Page
+        return (
+          <div className="w-full animate-slide-up">
+            <div className="text-center mb-8">
+              <div className="inline-block p-3 bg-blue-50 rounded-full mb-4">
+                <Lock className="w-8 h-8 text-blue-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-slate-900 mb-2">
+                Analyse & Experteneinschätzung sichern
+              </h2>
+              <p className="text-slate-500">
+                Der letzte Schritt zu deiner optimierten PKV.
+              </p>
+            </div>
+
+            {/* Value Proposition Box */}
+            <div className="bg-white border-2 border-blue-100 rounded-2xl p-6 mb-8 shadow-sm">
+              <h3 className="font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2">
+                Das erwartet dich im Expertengespräch:
+              </h3>
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="bg-green-100 p-1 rounded-full mt-1 shrink-0">
+                    <Euro className="w-4 h-4 text-green-700" />
+                  </div>
+                  <div>
+                    <span className="font-bold text-slate-800 block">Einsparpotenzial realisieren</span>
+                    <span className="text-sm text-slate-600">Wir prüfen exakt, wie viel du durch einen Wechsel sparen kannst.</span>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="bg-blue-100 p-1 rounded-full mt-1 shrink-0">
+                    <ShieldCheck className="w-4 h-4 text-blue-700" />
+                  </div>
+                  <div>
+                    <span className="font-bold text-slate-800 block">Stabile Beiträge im Alter</span>
+                    <span className="text-sm text-slate-600">Empfehlung leistungsstarker Tarife, die auch langfristig bezahlbar bleiben.</span>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="bg-amber-100 p-1 rounded-full mt-1 shrink-0">
+                    <AlertTriangle className="w-4 h-4 text-amber-700" />
+                  </div>
+                  <div>
+                    <span className="font-bold text-slate-800 block">Fehlervermeidung</span>
+                    <span className="text-sm text-slate-600">Aufklärung über häufige Fallstricke bei der Tarifauswahl.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Opt-In Form */}
+            <form onSubmit={handleFormSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Vor- & Nachname</label>
+                <div className="relative">
+                  <User className="absolute left-3 top-3.5 w-5 h-5 text-slate-400" />
+                  <input 
+                    type="text" 
+                    required
+                    value={formData.fullName}
+                    onChange={(e) => setFormData({...formData, fullName: e.target.value})}
+                    className="w-full pl-10 p-3 border-2 border-slate-200 rounded-xl focus:border-blue-600 focus:outline-none"
+                    placeholder="Max Mustermann"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">E-Mail Adresse</label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3.5 w-5 h-5 text-slate-400" />
+                  <input 
+                    type="email" 
+                    required
+                    value={formData.email}
+                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                    className="w-full pl-10 p-3 border-2 border-slate-200 rounded-xl focus:border-blue-600 focus:outline-none"
+                    placeholder="max@beispiel.de"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Handynummer (für Rückfragen)</label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-3.5 w-5 h-5 text-slate-400" />
+                  <input 
+                    type="tel" 
+                    required
+                    value={formData.phone}
+                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                    className="w-full pl-10 p-3 border-2 border-slate-200 rounded-xl focus:border-blue-600 focus:outline-none"
+                    placeholder="0171 12345678"
+                  />
+                </div>
+              </div>
+
+              <button 
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl text-lg shadow-lg mt-6 flex items-center justify-center gap-2 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" /> Wird verarbeitet...
+                  </>
+                ) : (
+                  <>
+                    Kostenlos anfordern <ArrowRight className="w-5 h-5" />
+                  </>
+                )}
+              </button>
+              
+              <p className="text-xs text-slate-400 text-center mt-4 flex items-center justify-center gap-1">
+                <Lock className="w-3 h-3" /> Deine Daten werden sicher & verschlüsselt übertragen.
+              </p>
+            </form>
+          </div>
+        );
+
       default:
         return null;
     }
@@ -335,7 +495,8 @@ const App = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 flex flex-col">
-      {step > 0 && step < 8 && (
+      {/* Progress Bar */}
+      {step > 0 && step < 9 && (
         <div className="bg-white border-b border-slate-100 px-6 py-4 flex items-center justify-between sticky top-0 z-10">
           <button onClick={handleBack} className="text-slate-400 hover:text-slate-600 transition-colors">
             <ArrowLeft className="w-6 h-6" />
@@ -344,12 +505,12 @@ const App = () => {
             <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
               <div 
                 className="h-full bg-blue-600 transition-all duration-500 ease-out"
-                style={{ width: `${(step / 8) * 100}%` }}
+                style={{ width: `${(step / 9) * 100}%` }}
               ></div>
             </div>
           </div>
           <div className="text-sm font-medium text-slate-400 w-6 text-right">
-            {step}/7
+            {step < 8 ? `${step}/7` : ''}
           </div>
         </div>
       )}
@@ -430,7 +591,7 @@ const OptionButton = ({ label, subLabel, selected, onClick, highlight, compact }
   </button>
 );
 
-const ResultPage = ({ formData, onRedirect }) => {
+const ResultPage = ({ formData, onNextStep }) => {
   const isEligible = (formData.income === '>77400' || formData.jobStatus === 'Selbstständig' || formData.jobStatus === 'GGF' || formData.jobStatus === 'Beamter');
   const hasHealthIssues = formData.healthIssues.length > 0;
   const potentialSavings = "350€ - 600€"; 
@@ -486,12 +647,12 @@ const ResultPage = ({ formData, onRedirect }) => {
 
         <div className="text-center border-t border-slate-100 pt-6">
           <p className="text-slate-600 mb-6">
-            Um das genaue Einsparpotenzial auf den Cent genau zu berechnen und die Gesundheitsfragen final zu klären, benötigen wir ein kurzes Expertengespräch.
+            Um das genaue Einsparpotenzial zu berechnen und dir Leistungsstarke Tarife zu empfehlen, die selbst im Alter preiswert bleiben, benötigen wir ein kurzes Expertengespräch.
           </p>
           
           <div className="space-y-3">
             <button 
-              onClick={onRedirect}
+              onClick={onNextStep}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white text-lg font-bold py-4 px-8 rounded-xl shadow-lg hover:shadow-blue-200/50 transition-all flex items-center justify-center gap-2"
             >
               <Calculator className="w-5 h-5" />
@@ -499,7 +660,7 @@ const ResultPage = ({ formData, onRedirect }) => {
             </button>
             
             <button 
-              onClick={onRedirect}
+              onClick={onNextStep}
               className="w-full bg-white hover:bg-slate-50 text-slate-700 border-2 border-slate-200 font-bold py-4 px-8 rounded-xl transition-all"
             >
               Termin vereinbaren
