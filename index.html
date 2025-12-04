@@ -4,12 +4,26 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Verticus PKV Check</title>
+    
+    <!-- 1. Tailwind CSS (für das Design) -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 2. Iframe Resizer (damit es auf Onepage ohne Scrollbalken passt) -->
+    <script src="https://cdn.jsdelivr.net/npm/iframe-resizer@4.3.9/js/iframeResizer.contentWindow.min.js"></script>
+
+    <!-- 3. HIER DEINEN MICROSOFT CLARITY CODE EINFÜGEN -->
+  <script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "ugd2vazpjc");
+</script>
+    <!-- ENDE CLARITY CODE -->
+
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
-
-<script src="https://cdn.jsdelivr.net/npm/iframe-resizer@4.3.9/js/iframeResizer.contentWindow.min.js"></script>
