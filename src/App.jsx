@@ -594,7 +594,14 @@ const OptionButton = ({ label, subLabel, selected, onClick, highlight, compact }
 const ResultPage = ({ formData, onNextStep }) => {
   const isEligible = (formData.income === '>77400' || formData.jobStatus === 'Selbstständig' || formData.jobStatus === 'GGF' || formData.jobStatus === 'Beamter');
   const hasHealthIssues = formData.healthIssues.length > 0;
-  const potentialSavings = "350€ - 600€"; 
+  
+  // --- ANPASSUNG BEAMTE ---
+  // Standardwert: 350-600€
+  // Beamte: 50-90€
+  let potentialSavings = "350€ - 600€";
+  if (formData.jobStatus === 'Beamter') {
+    potentialSavings = "50€ - 90€";
+  }
 
   return (
     <div className="w-full animate-fade-in bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
